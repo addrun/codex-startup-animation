@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "file": "assets/dragon-startup.wav",
+  "sha256": "8ABC55F8D29BCA17B973DDFC48A89DF91214AF841AE521462495CB13A95E3D88",
+  "durationSeconds": 8.3,
+  "sampleRate": 44100,
+  "channels": 2,
+  "bitsPerSample": 16,
+  "bakedOverallGain": 1.0,
+  "playerVolume": 0.44,
+  "voicePlacementSeconds": 5.47,
+  "estimatedSustainedSpeechOnsetSeconds": 5.97,
+  "voiceGain": 0.7,
+  "reverbWetRmsRatio": 0.12,
+  "reverb": {
+    "predelaySeconds": 0.016,
+    "rt60Seconds": 0.7,
+    "irLengthSeconds": 0.9,
+    "wetBandHz": [
+      180,
+      5500
+    ]
+  },
+  "backgroundAndWetFadeSeconds": [
+    7.25,
+    8.25
+  ],
+  "last50msSilent": true,
+  "samplePeak": 0.784698486328125,
+  "clippedSamples": 0,
+  "source": {
+    "background": "User-provided two-track mix; redistribution permission not established in project records.",
+    "voiceRepository": "https://github.com/lxj5820/dsh-boot-animation",
+    "voiceCommit": "a3219aba003639572ffcf19772d0028b6cccd360",
+    "voiceSource": "assets/videos/1.mp4 (audio only, processed and remixed)",
+    "licenseFile": "LICENSES/dsh-boot-animation-MIT.txt",
+    "noticesFile": "THIRD_PARTY_NOTICES.md"
+  },
+  "note": "Player applies 44 percent volume once. Original mixes and source recordings remain in a local archive."
+}

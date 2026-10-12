@@ -1,0 +1,4 @@
+# Optional asset creation dependencies. The Windows launcher does not need Python.
+Pillow>=9.1
+numpy
+opencv-python

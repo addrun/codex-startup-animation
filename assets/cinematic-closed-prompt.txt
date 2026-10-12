@@ -1,0 +1,5 @@
+Use case: precise-object-edit
+Asset type: pixel-aligned alternate eye state for cinematic character animation.
+Edit target: supplied dragon-cinematic-open.png.
+Change ONLY the eyes: softly close BOTH eyes in a peaceful sleeping expression, drawing elegant lowered eyelids with fine black eyelashes. The left eye in the image is near pixel (430, 677) and right eye near (642, 620) on the 1024 by 1536 source canvas. Repaint only the immediate eye / eyelid regions, preserving face position, skin tone and facial anatomy.
+Everything else must remain exactly unchanged: same silver dragon woman identity, same pose and head tilt, same hair strands, horns, ornaments, earrings, mouth, smile, collar, shoulders, costume, cyan rim light and original alpha transparency. Keep pixel-perfect camera alignment and the EXACT 1024 x 1536 canvas. Do not zoom, crop, rotate, shift the head or redesign anything. Do not add a background; retain the transparent alpha background of the source. No text or watermark.

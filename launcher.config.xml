@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launcher>
+  <durationSeconds>8.0</durationSeconds>
+  <frameRate>60</frameRate>
+  <videoFile>output/gpt-dragon-cinematic-2k-60fps.mp4</videoFile>
+  <appUserModelId>OpenAI.Codex_2p2nqsd0c76g0!App</appUserModelId>
+  <executablePath></executablePath>
+  <executableArguments></executableArguments>
+  <characterImage>assets/dragon-cinematic-open.png</characterImage>
+  <closedEyeImage>assets/dragon-cinematic-closed.png</closedEyeImage>
+  <respectReducedMotion>true</respectReducedMotion>
+  <preferDetailTextures>true</preferDetailTextures>
+  <soundEnabled>true</soundEnabled>
+  <soundVolume>0.44</soundVolume>
+  <soundFile>assets/dragon-startup.wav</soundFile>
+  <startupTimeoutSeconds>40.0</startupTimeoutSeconds>
+  <windowReadyDelaySeconds>0.5</windowReadyDelaySeconds>
+  <requirePageContent>true</requirePageContent>
+  <tailHoldSeconds>7.75</tailHoldSeconds>
+  <introDurationSeconds>8.30</introDurationSeconds>
+  <readyFadeSeconds>0.45</readyFadeSeconds>
+  <blinkIntervalSeconds>4.0</blinkIntervalSeconds>
+  <blinkDurationSeconds>0.28</blinkDurationSeconds>
+</launcher>

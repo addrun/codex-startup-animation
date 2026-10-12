@@ -1,0 +1,22 @@
+{
+  "tool": "Built-in image_gen.imagegen",
+  "transparent_background": true,
+  "referenced_images": [
+    "dragon-cinematic-open.png",
+    "dragon-cinematic-closed.png"
+  ],
+  "outputs": [
+    {
+      "file": "dragon-eye-quarter.png",
+      "prompt": "Use case: identity-preserve. Edit target: image 1, the open-eyed silver dragon girl. Image 2 is a supporting reference for the fully closed eyelid pose. Create ONE aligned in-between animation frame at the SAME 1024x1536 canvas and identical composition. Change ONLY both eyelids and their lashes. Keep iris diameter, position, texture, pupil and highlights exactly like image 1; the iris is revealed by the lid, never compressed. Preserve face, head angle, eyebrows, skin lighting, dragon horns, outfit, earrings, and especially every foreground silver hair strand pixel and silhouette. The thin bang crossing the visible left eye must remain continuous, stationary, and above the lid. Do not draw duplicate lashes, pasted eye boundaries or wrinkles. Natural beautiful anime eyelid anatomy and painterly rendering matching the original, without changing character identity. Preserve true transparent background. No added text, panels, or frames.\nRequired eyelid state: 25% open: just a narrow sleepy slit; the upper eyelid is low and iris remains full round behind the lid, only its bottom visible. This is one still pose for a 60fps slow eye-opening animation, NOT a storyboard. Original iris remains circular and unscaled behind eyelids."
+    },
+    {
+      "file": "dragon-eye-half.png",
+      "prompt": "Use case: identity-preserve. Edit target: image 1, the open-eyed silver dragon girl. Image 2 is a supporting reference for the fully closed eyelid pose. Create ONE aligned in-between animation frame at the SAME 1024x1536 canvas and identical composition. Change ONLY both eyelids and their lashes. Keep iris diameter, position, texture, pupil and highlights exactly like image 1; the iris is revealed by the lid, never compressed. Preserve face, head angle, eyebrows, skin lighting, dragon horns, outfit, earrings, and especially every foreground silver hair strand pixel and silhouette. The thin bang crossing the visible left eye must remain continuous, stationary, and above the lid. Do not draw duplicate lashes, pasted eye boundaries or wrinkles. Natural beautiful anime eyelid anatomy and painterly rendering matching the original, without changing character identity. Preserve true transparent background. No added text, panels, or frames.\nRequired eyelid state: 50% open: softly half-lidded sleepy eyes; upper eyelid covers top half of the full round iris. This is one still pose for a 60fps slow eye-opening animation, NOT a storyboard. Original iris remains circular and unscaled behind eyelids."
+    },
+    {
+      "file": "dragon-eye-threequarter.png",
+      "prompt": "Use case: identity-preserve. Edit target: image 1, the open-eyed silver dragon girl. Image 2 is a supporting reference for the fully closed eyelid pose. Create ONE aligned in-between animation frame at the SAME 1024x1536 canvas and identical composition. Change ONLY both eyelids and their lashes. Keep iris diameter, position, texture, pupil and highlights exactly like image 1; the iris is revealed by the lid, never compressed. Preserve face, head angle, eyebrows, skin lighting, dragon horns, outfit, earrings, and especially every foreground silver hair strand pixel and silhouette. The thin bang crossing the visible left eye must remain continuous, stationary, and above the lid. Do not draw duplicate lashes, pasted eye boundaries or wrinkles. Natural beautiful anime eyelid anatomy and painterly rendering matching the original, without changing character identity. Preserve true transparent background. No added text, panels, or frames.\nRequired eyelid state: 75% open: gently opening awake eyes; upper lid slightly below fully open pose, original round iris stays full-sized. This is one still pose for a 60fps slow eye-opening animation, NOT a storyboard. Original iris remains circular and unscaled behind eyelids."
+    }
+  ]
+}

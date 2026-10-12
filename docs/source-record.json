@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/mytjxs/codex-startup-animation",
+  "release": "v1.0.0",
+  "asset_url": "https://github.com/mytjxs/codex-startup-animation/releases/download/v1.0.0/codex-startup-animation-v1.0.0-win-x64.zip",
+  "sha256": "682928d2e6ce85bfb3d83acadb4e85da9efe4948a593a63e4dc2e605a08ff524",
+  "repository_commit": "9ea3b32b4e53f2d9db5d54265f6341b63aee5c04",
+  "note": "Based on this release and commit. Original executable and documents retained only in a local archive.",
+  "licenseStatus": "No explicit upstream license found; redistribution permission requires confirmation.",
+  "licenseCheckedDate": "2026-10-12"
+}

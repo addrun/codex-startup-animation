@@ -1,0 +1,58 @@
+{
+    "schemaVersion":  1,
+    "completedUtc":  "2026-10-12T11:12:40.6102423Z",
+    "passed":  true,
+    "scope":  "Repository cleanup and explicit source/Windows bundle preparation; no remote publication.",
+    "isolatedSourceBuildPassed":  true,
+    "productionBinariesReplaced":  false,
+    "powershell":  {
+                       "version":  "Windows PowerShell 5.1",
+                       "scriptCount":  21,
+                       "parseErrors":  0,
+                       "utf8BomForScripts":  true
+                   },
+    "python":  {
+                   "parsedSourceFileCount":  6,
+                   "existingInterpreterAndPillowEnumsVerified":  true,
+                   "packagesInstalled":  false
+               },
+    "simulatedSuites":  [
+                            {
+                                "name":  "integration",
+                                "checkCount":  10,
+                                "passed":  true,
+                                "originalReportSha256":  "4C0E93615D76280B4216D7FAA16CF2FFBF8F611984C662279CDD26FD4AC1010F"
+                            },
+                            {
+                                "name":  "sound",
+                                "checkCount":  24,
+                                "passed":  true,
+                                "originalReportSha256":  "643DF695E7F40970B09EF6A2FA99823FF83FF940327852384B15CA896A34667A"
+                            }
+                        ],
+    "gitignore":  {
+                      "checkCount":  12,
+                      "passed":  true,
+                      "projectRepositoryInitialized":  false
+                  },
+    "bundlePreflight":  {
+                            "sourceAndWindowsPassed":  true,
+                            "fileHashesVerified":  true,
+                            "stateAndLogsExcluded":  true,
+                            "publicTextPrivacyCheckPassed":  true
+                        },
+    "runtimePreservation":  {
+                                "fileCount":  16,
+                                "executableAudioVideoTexturesConfigAndGeometryUnchanged":  true,
+                                "watcherProcessUnchanged":  true,
+                                "loginShortcutUnchanged":  true,
+                                "officialCodexStopped":  false
+                            },
+    "limitations":  [
+                        "Real official-icon cold start was not repeated during cleanup.",
+                        "Monitor hotplug and mixed DPI were not rerun.",
+                        "Four unused preview WAVs are archived and excluded from Git and ZIPs; local copies remain open in a music player.",
+                        "Final ZIP entry and hash receipts are kept alongside the delivered packages in bundle-validation.json.",
+                        "Redistribution permissions for the original animation and user-provided sources remain subject to THIRD_PARTY_NOTICES.md."
+                    ]
+}

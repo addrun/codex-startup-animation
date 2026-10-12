@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "scope": "Snapshot of the deployed version; simulated applications and owned-window screen capture.",
+  "completedUtc": "2026-10-12T10:38:04.3937728Z",
+  "passed": true,
+  "checkCount": 90,
+  "softwareCheckCount": 84,
+  "visualCheckCount": 6,
+  "suites": [
+    {
+      "suite": "introFade",
+      "passed": true,
+      "checkCount": 9,
+      "originalReportSha256": "3CA82A30D54172CE80E0CAADA33AC008876A63E796EE3FEBCA2DC98ABC4F6A2E"
+    },
+    {
+      "suite": "soundOverlay",
+      "passed": true,
+      "checkCount": 7,
+      "originalReportSha256": "80DF17FD188CC8BCE8E643134676FB29ED838C833FB8E5A9295F467343D4C109"
+    },
+    {
+      "suite": "page",
+      "passed": true,
+      "checkCount": 8,
+      "originalReportSha256": "EF3BE04812C9499A11BE5F674BDCE2A2165ECE3EBC6BB70A0F8B458491E90F38"
+    },
+    {
+      "suite": "integration",
+      "passed": true,
+      "checkCount": 10,
+      "originalReportSha256": "ED068F095579A9D801237A25B2063952A95AE3786C5087C622EF9CAFB24FA4E2"
+    },
+    {
+      "suite": "watcher",
+      "passed": true,
+      "checkCount": 15,
+      "originalReportSha256": "5AE6FC3859D7FAF4DCE95442824AD6ED203AB6AE400F771B264B36E6D236154E"
+    },
+    {
+      "suite": "sound",
+      "passed": true,
+      "checkCount": 24,
+      "originalReportSha256": "4D236A4FCC10A47A3F5D52D4874BB61D6AAB52153D417164730493D0014E6C1D"
+    },
+    {
+      "suite": "watcherAudioOutput",
+      "passed": true,
+      "checkCount": 11,
+      "originalReportSha256": "B429B96CF5500F5C5E9DABCA93A2D482F6D1C373A23BD63646E33ED88A152C9B"
+    },
+    {
+      "suite": "visualFade",
+      "passed": true,
+      "checkCount": 6,
+      "originalReportSha256": "2E889FDF14D674D430ECEA38092E2A79C219F7B99DB43B560182A3D64D43ADA5"
+    }
+  ],
+  "binaries": [
+    {
+      "file": "Start-Codex-Dragon.exe",
+      "sha256": "F9FE33ED0E07B16A9AE1463CCD1A9F64B4591D1BD157D139C79CD715ABC39C04"
+    },
+    {
+      "file": "Watch-Codex-Dragon.exe",
+      "sha256": "354ECC170F0F4B1E5F078D33978D184FBA035AB5D66BEF7EC2D115718154D533"
+    }
+  ],
+  "audioSha256": "8ABC55F8D29BCA17B973DDFC48A89DF91214AF841AE521462495CB13A95E3D88",
+  "videoSha256": "73798205DD9B78D820DE018DC858D98826D52EEB2D9AB6D75F1B6F0E0660409A",
+  "passiveActivationRequests": 0,
+  "realOfficialColdStartVerified": false,
+  "currentCodexTerminated": false,
+  "globalWindowsVolumeModified": false,
+  "screen": {
+    "sampleCount": 143,
+    "actualFps": 40.825540734287024,
+    "maximumGapMilliseconds": 33.28869999999995,
+    "intermediateFrameCount": 11,
+    "fadeSeconds": 0.46300000000000097,
+    "blackFrameIndices": [],
+    "contactSheet": "docs/images/fade-contact-sheet.png"
+  },
+  "limitations": [
+    "Real official-icon cold start is pending after safely ending the current session.",
+    "Window response and page content do not prove completion of every network or backend request.",
+    "No sampled black frame at the measured sampling rate; no claim about every possible GPU or display.",
+    "Owned audio-session counters confirm software signal, not speaker quality.",
+    "Logoff/login, mixed DPI and monitor hotplug were not rerun."
+  ]
+}

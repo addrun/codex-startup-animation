@@ -1,0 +1,31 @@
+# Only the production movie belongs in Git. State and diagnostics stay local.
+/output/*
+!/output/gpt-dragon-cinematic-2k-60fps.mp4
+/tests/output/
+/tools/pydeps/
+
+# Local binaries are distributed separately in the Windows release ZIP.
+*.exe
+*.dll
+*.pdb
+*.lnk
+*.zip
+*.7z
+*.log
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+bin/
+obj/
+dist/
+releases/
+.vs/
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+*.tmp
+*.bak
+*~
