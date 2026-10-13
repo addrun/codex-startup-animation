@@ -626,17 +626,11 @@ namespace DragonLauncher
             {
                 for (int i = 0; i < 2; i++)
                 {
-                        Point pupil = new Point(eyeCenters[i].X + 5, eyeCenters[i].Y + 2);
-                        dc.PushClip(new EllipseGeometry(pupil, 25, 19));
-                        dc.PushOpacity((awake - 0.85) / 0.15);
-                        for (int k = 0; k < 3; k++)
-                        {
-                            double x = pupil.X - 13 + k * 11;
-                            double y = pupil.Y - 12 + Math.Sin(Time * 1.3 + k) * 2;
-                            dc.DrawLine(new Pen(Alpha(0.18, 63, 233, 222), 1.3), new Point(x, y), new Point(x, y + 24));
-                        }
-                        Bokeh(dc, pupil.X + 5, pupil.Y - 9, 5, 0.25);
-                        dc.Pop(); dc.Pop();
+                    Point pupil = new Point(eyeCenters[i].X + 5, eyeCenters[i].Y + 2);
+                    dc.PushClip(new EllipseGeometry(pupil, 25, 19));
+                    dc.PushOpacity((awake - 0.85) / 0.15);
+                    Bokeh(dc, pupil.X + 5, pupil.Y - 9, 5, 0.25);
+                    dc.Pop(); dc.Pop();
                 }
             }
         }

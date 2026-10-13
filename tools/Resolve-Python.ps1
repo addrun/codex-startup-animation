@@ -27,7 +27,8 @@ foreach ($module in $RequiredModules) {
 $probe = 'import sys; assert sys.version_info >= (3, 9)'
 if ($RequiredModules.Count) { $probe += '; import ' + ($RequiredModules -join ', ') }
 if ($RequiredModules -contains 'PIL') {
-    $probe += '; from PIL import Image; assert hasattr(Image, "Resampling") and hasattr(Image, "Quantize")'
+    # Single quotes survive native -c argument passing in Windows PowerShell 5.1.
+    $probe += '; from PIL import Image; assert hasattr(Image, ''Resampling'') and hasattr(Image, ''Quantize'')'
 }
 foreach ($candidate in @($candidates | Select-Object -Unique)) {
     try {

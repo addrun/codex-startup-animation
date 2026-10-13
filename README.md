@@ -30,6 +30,8 @@
 
 启用不需要管理员权限，也不改写官方快捷方式。登录入口通过当前桌面的 Explorer 启动监视器，使其在 Codex 退出后继续运行。移动项目后，在新目录重新运行启用脚本以更新本项目登录项。
 
+这里的登录自启动只运行动画监视器，不会主动打开 Codex。官方 Codex 自身的登录项与监视器独立，在 Windows「启动应用」中可能显示为 `ChatGPT`。如果希望登录后保持 Codex 关闭、手动点击官方图标时再播放动画，可关闭该官方登录项并保留动画监视器。
+
 ```powershell
 # 查看实际进程和心跳
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Get-Animation-WatcherStatus.ps1

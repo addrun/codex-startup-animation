@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "scope": "Local eye-highlight repair; offline visuals and owned simulated applications.",
+  "completedUtc": "2026-10-13T09:37:44.6099737Z",
+  "passed": true,
+  "suites": [
+    {
+      "suite": "tailMotion",
+      "passed": true,
+      "checkCount": 5,
+      "originalReportSha256": "2EB1F1DCFDD1526CF6D5D81BE7FB006384567386735F60662C351586BE396AC8"
+    },
+    {
+      "suite": "introFade",
+      "passed": true,
+      "checkCount": 3,
+      "tests": [
+        {
+          "name": "early",
+          "passed": true
+        },
+        {
+          "name": "late",
+          "passed": true
+        },
+        {
+          "name": "reduced",
+          "passed": true
+        }
+      ],
+      "originalReportSha256": "8DEACE0AF17E7E5EFD82EA53AB188F6B72843AABC0735EF86F10810D5A778FD2"
+    },
+    {
+      "suite": "startupIntegration",
+      "passed": true,
+      "checkCount": 10,
+      "tests": [
+        {
+          "name": "delayed-window",
+          "passed": true
+        },
+        {
+          "name": "corrupt-video",
+          "passed": true
+        },
+        {
+          "name": "reduced-motion",
+          "passed": true
+        },
+        {
+          "name": "missing-video",
+          "passed": true
+        },
+        {
+          "name": "no-window-timeout",
+          "passed": true
+        },
+        {
+          "name": "preview-no-activation",
+          "passed": true
+        },
+        {
+          "name": "preview-activation-conflict",
+          "passed": true
+        },
+        {
+          "name": "render-check-activation-conflict",
+          "passed": true
+        },
+        {
+          "name": "duplicate-start",
+          "passed": true
+        },
+        {
+          "name": "root-config-unchanged",
+          "passed": true
+        }
+      ],
+      "originalReportSha256": "082418A80F5F7A1012B09D8BBABAD783C654257936CE81C132CF5BC8C6ABBD57"
+    },
+    {
+      "suite": "visualFade",
+      "passed": true,
+      "checkCount": 6,
+      "originalReportSha256": "26B3669FB636E740086A201F2C822E488C41EC4C6AA98048D354610AA2146374"
+    }
+  ],
+  "eyeComparison": {
+    "passed": true,
+    "differentPixels": 1558,
+    "changedBounds": [
+      2194,
+      698,
+      2274,
+      782
+    ],
+    "outsideEyeDifferences": 0,
+    "sourceDimensions": [
+      2560,
+      1440
+    ],
+    "comparison": "docs/images/eye-highlight-before-after.png",
+    "encodedFrameAt7_75SecondsReviewed": true
+  },
+  "media": {
+    "fullDecodePassed": true,
+    "width": 2560,
+    "height": 1440,
+    "frameRate": "60/1",
+    "decodedFrameCount": 480,
+    "durationSeconds": 8.0,
+    "embeddedAudioStreams": 0,
+    "audioSource": "assets/dragon-startup.wav"
+  },
+  "screen": {
+    "sampleCount": 136,
+    "actualFps": 39.010048641774134,
+    "maximumGapMilliseconds": 70.56229999999996,
+    "intermediateFrameCount": 10,
+    "fadeSeconds": 0.46300000000000097,
+    "blackFrameIndices": []
+  },
+  "files": [
+    {
+      "file": "Start-Codex-Dragon.exe",
+      "sha256": "AF54ABBCB5DB62BA8858CA1431E65ADFAEED3976161C377E2FC3C6D1724D5537"
+    },
+    {
+      "file": "output/gpt-dragon-cinematic-2k-60fps.mp4",
+      "sha256": "1D150DA9F7432D96CB82BB5344BEDE982595F49A0E9D2A01CFB841B618F41355"
+    },
+    {
+      "file": "Watch-Codex-Dragon.exe",
+      "sha256": "354ECC170F0F4B1E5F078D33978D184FBA035AB5D66BEF7EC2D115718154D533"
+    },
+    {
+      "file": "launcher.config.xml",
+      "sha256": "BF5B5355AAC374D13397C891716FA67400DE0E63FD147DCEFA5C945ED434A021"
+    },
+    {
+      "file": "assets/dragon-startup.wav",
+      "sha256": "8ABC55F8D29BCA17B973DDFC48A89DF91214AF841AE521462495CB13A95E3D88"
+    }
+  ],
+  "sourceSceneSha256": "3EA691DD91EC1CCAC222FF4D46A271343BBC0B364B70AEA989AAEB6E9A1C6325",
+  "pythonResolverSha256": "B7B4B1C963B4FD98DD4EF1B12C72A11362DA78025059BAF4BA146AB8521A83E7",
+  "previewSha256": "7FD1D2E9B892FD2DD74F26623DE8DDBBB9F96177E9C24CB07A6507D0A4F7196D",
+  "passiveActivationRequests": 0,
+  "realOfficialColdStartVerified": false,
+  "currentCodexTerminated": false,
+  "limitations": [
+    "Only the listed suites were rerun; the previous 90-check report is historical.",
+    "Real official-icon cold start and logoff/login were not performed.",
+    "No sampled black frames in the measured environment; no universal GPU claim.",
+    "Window response and page content do not prove every network operation has completed."
+  ]
+}
