@@ -80,6 +80,7 @@ namespace DragonLauncher
         private readonly ConcurrentQueue<int> processStarts = new ConcurrentQueue<int>();
         private readonly ConcurrentQueue<ObservedWindowEvent> windowEvents = new ConcurrentQueue<ObservedWindowEvent>();
         private readonly HashSet<int> knownPids = new HashSet<int>();
+        private readonly Dictionary<int, long> knownProcessStarts = new Dictionary<int, long>();
         private readonly HashSet<int> rejectedPids = new HashSet<int>();
         private readonly HashSet<IntPtr> knownWindowHandles = new HashSet<IntPtr>();
         private readonly Dictionary<int, bool> matchCache = new Dictionary<int, bool>();
@@ -171,23 +172,23 @@ namespace DragonLauncher
             try
             {
                 currentWindows = WindowProbe.List(exePath, appId, true);
-                cycle.Initialize(currentWindows.Length != 0);
                 foreach (IntPtr baselineWindow in currentWindows) knownWindowHandles.Add(baselineWindow);
                 foreach (var process in Process.GetProcesses())
                 {
                     using (process)
                     {
-                        try { if (WindowProbe.Matches((uint)process.Id, 0, exePath, appId)) knownPids.Add(process.Id); }
+                        try { if (IsPrimaryDesktopProcess(process.Id)) RememberPrimaryProcess(process.Id); }
                         catch { }
                     }
                 }
-                // Do not replay over an already-running Codex instance when this
-                // monitor starts. A later all-windows-closed transition rearms it.
+                cycle.Initialize(knownPids.Count != 0 || currentWindows.Length != 0);
+                // Hidden/tray instances also belong to the baseline. Only the
+                // end of the desktop primary process lifetime rearms a cycle.
                 StartProcessWatcher();
                 StartWindowHook();
                 monitorMode = wmiAvailable ? "wmi_events_with_poll_fallback" : "poll_fallback";
                 timer.Start();
-                RecordEvent("watcher_started", "pid=" + Process.GetCurrentProcess().Id + "; inJob=" + lifetime.InJob + "; baselineWindows=" + currentWindows.Length);
+                RecordEvent("watcher_started", "pid=" + Process.GetCurrentProcess().Id + "; inJob=" + lifetime.InJob + "; baselineWindows=" + currentWindows.Length + "; baselineDesktopProcesses=" + knownPids.Count);
                 SaveStatus();
             }
             catch (Exception error)
@@ -292,9 +293,12 @@ namespace DragonLauncher
 
         private void ProcessQueuedEvents()
         {
+            // Process exit can be followed by a new window event before the
+            // periodic scan, especially when WMI is unavailable.
+            PrunePrimaryProcesses();
             int pid;
             while (processStarts.TryDequeue(out pid))
-                if (pid > 0 && !knownPids.Contains(pid)) ProcessCandidate(pid, "wmi_process_start");
+                if (pid > 0) ProcessCandidate(pid, "wmi_process_start");
             ObservedWindowEvent observed;
             while (windowEvents.TryDequeue(out observed))
             {
@@ -315,35 +319,101 @@ namespace DragonLauncher
                 // events must never masquerade as a fresh process activation.
                 if (observed.Kind == EventObjectCreate && matches && !cycle.Consumed && !knownPids.Contains((int)eventOwner))
                     ProcessCandidate((int)eventOwner, "primary_process_window_created");
-                // Some packaged app activations reuse an already-running host
-                // process and emit no process-start event. A newly-created native
-                // top-level Codex window is the bounded fallback trigger.
+                // A newly-created native window is a fallback for missed process
+                // events, never a new cycle for a surviving tray instance.
                 if (!cycle.Consumed && (observed.Kind == EventObjectCreate || observed.Kind == EventObjectShow) &&
                     IsTopLevelWindow(hwnd) && Array.IndexOf(WindowProbe.List(exePath, appId, true), hwnd) >= 0)
                 {
                     uint owner; GetWindowThreadProcessId(hwnd, out owner);
-                    if (owner != 0 && !knownWindowHandles.Contains(hwnd) && IsPrimaryDesktopProcess((int)owner))
-                    {
-                        knownPids.Add((int)owner);
-                        Trigger(observed.Kind == EventObjectShow ? "main_window_shown" : "main_window_created", (int)owner);
-                    }
+                    if (owner != 0 && !knownWindowHandles.Contains(hwnd))
+                        ProcessCandidate((int)owner, observed.Kind == EventObjectShow ? "main_window_shown" : "main_window_created");
                 }
             }
         }
 
         private void ProcessCandidate(int pid, string trigger)
         {
+            // WMI/window events can arrive before the next polling scan. Remove
+            // exited identities now so a rapid quit/relaunch is not suppressed
+            // by a stale PID, including PID reuse by a new process lifetime.
+            PrunePrimaryProcesses();
             if (knownPids.Contains(pid) || rejectedPids.Contains(pid)) return;
             if (!IsPrimaryDesktopProcess(pid)) { rejectedPids.Add(pid); return; }
-            knownPids.Add(pid);
+            bool existingPrimary = knownPids.Count != 0;
+            if (!RememberPrimaryProcess(pid)) return;
             matchCache[pid] = true;
             processEvents++;
-            // A fresh primary activation after a consumed cycle which never
-            // produced a window is a separate attempt; Electron children have
-            // already been excluded and a live overlay remains single instance.
-            cycle.PrimaryActivation(currentWindows.Length != 0, overlayProcess != null);
+            RecordPrimaryStart(pid, trigger);
+            // An official icon may create a short-lived activation process while
+            // its original desktop host survives in the tray. It is the same
+            // cycle even when that host has no visible/native main window.
+            cycle.PrimaryActivation(existingPrimary, overlayProcess != null && !SafeHasExited(overlayProcess));
             if (!cycle.Consumed && !diagnostic) Trigger(trigger, pid);
             else cyclesSuppressed++;
+        }
+
+        private bool RememberPrimaryProcess(int pid)
+        {
+            try
+            {
+                using (var process = Process.GetProcessById(pid))
+                {
+                    if (process.HasExited) return false;
+                    long started = process.StartTime.ToUniversalTime().Ticks;
+                    knownPids.Add(pid); knownProcessStarts[pid] = started;
+                    return true;
+                }
+            }
+            catch { return false; }
+        }
+
+        private void RecordPrimaryStart(int pid, string source)
+        {
+            // Keep local diagnostics about who created the desktop process,
+            // without collecting its command line, page text, or credentials.
+            string detail = "source=" + source + "; pid=" + pid;
+            try
+            {
+                using (var process = Process.GetProcessById(pid))
+                {
+                    detail += "; processStartedUtc=" + process.StartTime.ToUniversalTime().ToString("o");
+                    int parentId;
+                    if (SnapshotParents().TryGetValue(pid, out parentId) && parentId > 0)
+                    {
+                        detail += "; parentPid=" + parentId;
+                        using (var parent = Process.GetProcessById(parentId))
+                            if (parent.StartTime <= process.StartTime)
+                                detail += "; parentExecutable=" + Path.GetFileName(parent.MainModule.FileName);
+                    }
+                }
+            }
+            catch { detail += "; parentDetails=unavailable"; }
+            RecordEvent("primary_process_observed", detail);
+        }
+
+        private void PrunePrimaryProcesses()
+        {
+            foreach (int pid in knownPids.ToArray())
+            {
+                bool exited = false;
+                try
+                {
+                    using (var process = Process.GetProcessById(pid))
+                    {
+                        long started;
+                        exited = process.HasExited || !knownProcessStarts.TryGetValue(pid, out started) ||
+                            process.StartTime.ToUniversalTime().Ticks != started;
+                    }
+                }
+                catch (ArgumentException) { exited = true; }
+                catch (InvalidOperationException) { exited = true; }
+                // A transient access failure is not evidence of an exit.
+                catch { }
+                if (!exited) continue;
+                knownPids.Remove(pid); knownProcessStarts.Remove(pid);
+                rejectedPids.Remove(pid); matchCache.Remove(pid);
+            }
+            cycle.ObserveDesktopProcesses(knownPids.Count != 0);
         }
 
         private bool IsPrimaryDesktopProcess(int pid)
@@ -414,6 +484,7 @@ namespace DragonLauncher
                 rejectedPids.Clear();
                 try
                 {
+                    PrunePrimaryProcesses();
                     var alive = new HashSet<int>();
                     foreach (var process in Process.GetProcesses())
                     using (process)
@@ -429,7 +500,6 @@ namespace DragonLauncher
                         }
                         catch { }
                     }
-                    knownPids.RemoveWhere(delegate(int id) { return !alive.Contains(id); });
                     rejectedPids.RemoveWhere(delegate(int id) { return !alive.Contains(id); });
                 }
                 catch (Exception error) { lastError = "Process scan failed: " + error.Message; }
@@ -442,7 +512,7 @@ namespace DragonLauncher
             if (wasOpen && !isOpen)
             {
                 cycle.ObserveWindows(false);
-                lastTrigger = "all_main_windows_closed";
+                lastTrigger = knownPids.Count != 0 ? "main_windows_hidden_primary_alive" : "all_desktop_processes_exited";
             }
             if (!wasOpen && isOpen)
             {
@@ -450,7 +520,7 @@ namespace DragonLauncher
                 {
                     int pid = 0;
                     try { uint owner; GetWindowThreadProcessId(found[0], out owner); pid = (int)owner; } catch { }
-                    Trigger("main_window_created", pid);
+                    ProcessCandidate(pid, "main_window_created");
                 }
                 else cyclesSuppressed++;
             }
@@ -494,9 +564,9 @@ namespace DragonLauncher
             {
                 if (!overlayProcess.HasExited) return;
                 overlayProcess.Dispose(); overlayProcess = null;
-                RecordEvent("overlay_exited", "cycle remains consumed until windows close or a fresh activation");
+                RecordEvent("overlay_exited", "cycle remains consumed while the desktop primary process survives");
                 // A timed-out or skipped overlay consumes the activation cycle.
-                // Only observing all main windows close rearms this cycle.
+                // Hidden windows and tray restoration never rearm this cycle.
             }
             catch { overlayProcess = null; }
         }
@@ -654,9 +724,15 @@ namespace DragonLauncher
             gate.ObserveWindows(true);
             if (gate.TryTrigger()) throw new InvalidOperationException("active window retriggered"); checks.Add("active_window_suppressed");
             gate.ObserveWindows(false);
-            if (!gate.TryTrigger()) throw new InvalidOperationException("closed-window cycle did not rearm"); checks.Add("closed_window_rearmed");
+            if (gate.TryTrigger()) throw new InvalidOperationException("hidden-window cycle rearmed"); checks.Add("tray_hidden_window_suppressed");
+            gate.PrimaryActivation(true, false);
+            if (gate.TryTrigger()) throw new InvalidOperationException("surviving primary activation replayed"); checks.Add("surviving_primary_activation_suppressed");
+            gate.ObserveDesktopProcesses(false);
+            if (!gate.TryTrigger()) throw new InvalidOperationException("exited-primary cycle did not rearm"); checks.Add("exited_primary_rearmed");
             var baseline = new CycleGate(); baseline.Initialize(true);
             if (baseline.TryTrigger()) throw new InvalidOperationException("existing baseline replayed"); checks.Add("existing_baseline_suppressed");
+            baseline.ObserveWindows(false); baseline.ObserveDesktopProcesses(true);
+            if (baseline.TryTrigger()) throw new InvalidOperationException("hidden baseline replayed"); checks.Add("hidden_process_baseline_suppressed");
             var attempt = new CycleGate(); attempt.TryTrigger(); attempt.PrimaryActivation(false, true);
             if (attempt.TryTrigger()) throw new InvalidOperationException("live overlay duplicate was accepted"); checks.Add("active_overlay_suppressed");
             attempt.PrimaryActivation(false, false);
@@ -772,19 +848,18 @@ namespace DragonLauncher
         // without WMI, hooks, a desktop application, or UI.
         private sealed class CycleGate
         {
-            private bool consumed, hasWindows;
+            private bool consumed;
             public bool Consumed { get { return consumed; } }
-            public void Initialize(bool present) { hasWindows = present; consumed = present; }
+            public void Initialize(bool present) { consumed = present; }
             public bool TryTrigger() { if (consumed) return false; consumed = true; return true; }
-            public void PrimaryActivation(bool present, bool liveOverlay)
+            public void PrimaryActivation(bool existingPrimary, bool liveOverlay)
             {
-                if (consumed && !present && !liveOverlay) consumed = false;
+                consumed = existingPrimary || liveOverlay;
             }
+            public void ObserveDesktopProcesses(bool present) { if (!present) consumed = false; }
             public void ObserveWindows(bool present)
             {
-                if (hasWindows && !present) consumed = false;
                 if (present) consumed = true;
-                hasWindows = present;
             }
         }
     }

@@ -21,6 +21,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\run-integration.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\run-page-integration.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\run-page-probe-lifetime.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\run-watcher-integration.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\run-watcher-lifecycle.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\run-sound-integration.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\run-sound-overlay.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\run-intro-fade.ps1
@@ -28,6 +29,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\run-lifetime-regress
 ```
 
 测试生成文件写入 `tests/output/`，仅本机保存，不放入 Git 或发布包。生命周期回归使用自己的模拟宿主和进程，不结束真实 Codex。
+
+`run-watcher-lifecycle.ps1` 用不含媒体的假观察器检查托盘隐藏/恢复、原生窗口销毁/重建、已有隐藏进程基线、子进程、临时激活与完全退出后快速重开。可用 `-WatcherPath <待测EXE>` 指向隔离构建；它不播放声音或读取真实 Codex。完整媒体和淡出仍由 `run-watcher-integration.ps1` 分别验证。
 
 **以下补充测试会播放正式音效一次：**
 

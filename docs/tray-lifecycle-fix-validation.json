@@ -1,0 +1,94 @@
+{
+  "date": "2026-10-14",
+  "passed": true,
+  "testedWatcherSha256": "7FE531682D28A42E340C73FBE3E5ABD6692E2592894902EDE654F357B198FF8E",
+  "stateMachineChecks": 10,
+  "lifecycleChecks": 18,
+  "tests": [
+    {
+      "name": "watcher-empty-baseline-never-activates-target-or-observer",
+      "passed": true
+    },
+    {
+      "name": "unrelated-cli-excluded",
+      "passed": true
+    },
+    {
+      "name": "first-cold-start-once-passive-only",
+      "passed": true
+    },
+    {
+      "name": "observer-never-restarts-target",
+      "passed": true
+    },
+    {
+      "name": "minimized-restore-no-replay",
+      "passed": true
+    },
+    {
+      "name": "tray-hide-keeps-live-primary",
+      "passed": true
+    },
+    {
+      "name": "tray-restore-no-replay",
+      "passed": true
+    },
+    {
+      "name": "native-window-destroy-live-primary-suppressed",
+      "passed": true
+    },
+    {
+      "name": "native-window-recreate-same-primary-no-replay",
+      "passed": true
+    },
+    {
+      "name": "watcher-restart-hidden-primary-no-baseline-replay",
+      "passed": true
+    },
+    {
+      "name": "electron-child-does-not-create-new-cycle",
+      "passed": true
+    },
+    {
+      "name": "renderer-type-excluded-through-poll-interval",
+      "passed": true
+    },
+    {
+      "name": "new-activation-observed-with-surviving-primary-suppressed",
+      "passed": true
+    },
+    {
+      "name": "temporary-activation-exit-retains-original-primary-cycle",
+      "passed": true
+    },
+    {
+      "name": "hidden-baseline-restore-no-replay",
+      "passed": true
+    },
+    {
+      "name": "complete-exit-rapid-relaunch-new-cycle-once",
+      "passed": true
+    },
+    {
+      "name": "second-cold-start-no-duplicates-or-target-activation",
+      "passed": true
+    },
+    {
+      "name": "watcher-stop-does-not-stop-live-target",
+      "passed": true
+    }
+  ],
+  "windowEventAndPollingFallbackVerified": true,
+  "fakeObserverUsed": true,
+  "realCodexStartedOrStopped": false,
+  "mediaTransitionRegression": "Complete media suite passed all 21 checks under desktop user, including full intro and ready fade. Initial sandbox transition timeout retained in local diagnostic archive.",
+  "actualUserLoginStartupCurrentStateVerified": true,
+  "productionDeploymentVerified": true,
+  "windowsLogonTestPerformed": false,
+  "officialLoginStartupState": "DisabledByUser before and after deployment",
+  "loginAutoOpenSource": "User confirmed Windows update reboot. Codex primary registered application restart, flags 3 permitting patch/reboot; consistent with update recovery. No historical restart-manager launch trace was collected.",
+  "completeMediaIntegrationChecks": 21,
+  "completeMediaIntegrationPassed": true,
+  "codexApplicationRestartRegistered": true,
+  "globalWindowsRestartSettingsChanged": false
+}

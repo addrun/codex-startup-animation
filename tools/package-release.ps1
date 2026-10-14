@@ -26,7 +26,7 @@ foreach ($folder in @('src', 'tests', 'tools', 'assets', 'docs', 'LICENSES')) {
 }
 
 $common = @('README.md', 'VALIDATION.md', 'THIRD_PARTY_NOTICES.md', 'launcher.config.xml',
-    'Enable-Official-Codex-Animation.ps1', 'Disable-Official-Codex-Animation.ps1',
+    'Enable-Official-Codex-Animation.ps1', 'Disable-Official-Codex-Animation.ps1', 'Disable-Codex-LoginStartup.ps1',
     'Exit-Animation-Watcher.ps1', 'Get-Animation-WatcherStatus.ps1',
     'Preview-Dragon.cmd', 'Preview-Waiting-Dragon.cmd', 'Start-Codex-Dragon.cmd',
     'output/gpt-dragon-cinematic-2k-60fps.mp4')

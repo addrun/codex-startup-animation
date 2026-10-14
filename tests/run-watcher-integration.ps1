@@ -64,13 +64,20 @@ function Start-Owned([string]$File, [string]$Arguments = '') {
 function Read-Status {
     try { return (Get-Content -LiteralPath (Join-Path $runRoot 'output\watcher-status.json') -Raw -Encoding utf8 | ConvertFrom-Json) } catch { return $null }
 }
-function Wait-Condition([scriptblock]$Condition, [int]$Deadline = 7000) {
+function Status-Evidence {
+    # Retain only scalar fields, not PowerShell ETS/file-provider metadata or
+    # .NET objects which ConvertTo-Json can recursively expand on Windows PS.
+    $status = Read-Status
+    $overlayPid = if ($null -eq $status.activeOverlayPid) { $null } else { [int]$status.activeOverlayPid }
+    return [ordered]@{pid=[int]$status.pid;running=[bool]$status.running;cyclesStarted=[int]$status.cyclesStarted;mainWindowCount=[int]$status.mainWindowCount;knownDesktopProcessCount=[int]$status.knownDesktopProcessCount;activeOverlayPid=$overlayPid;lastTrigger=[string]$status.lastTrigger;lastError=[string]$status.lastError}
+}
+function Wait-Condition([scriptblock]$Condition, [int]$Deadline = 9000) {
     $clock = [Diagnostics.Stopwatch]::StartNew()
     do { if (& $Condition) { return $true }; Start-Sleep -Milliseconds 100 } while ($clock.ElapsedMilliseconds -lt $Deadline)
     return $false
 }
 function Check([string]$Name, [bool]$Passed, $Evidence) {
-    $results.Add([pscustomobject]@{name=$Name;passed=$Passed;evidence=$Evidence})
+    $results.Add([ordered]@{name=$Name;passed=$Passed;evidence=$Evidence})
     Write-Output ((@('FAIL','PASS')[[int]$Passed]) + ': ' + $Name)
     if (-not $Passed) { throw $Name }
 }
@@ -92,7 +99,7 @@ try {
     $tailObserver = Start-Owned $launcher '--observe --startup-test'
     $tailExited = $tailObserver.WaitForExit(20000)
     $tailLog = Get-Content -LiteralPath (Join-Path $runRoot 'output\startup-timing.log') -Raw
-    Check 'video-once-tail-no-activation' ($tailExited -and $tailObserver.ExitCode -eq 2 -and $tailLog -match 'animation_tail' -and $tailLog -notmatch 'animation_loop|activation_requested' -and -not (Test-Path -LiteralPath $marker)) $tailLog
+    Check 'video-once-tail-no-activation' ($tailExited -and $tailObserver.ExitCode -eq 2 -and $tailLog -match 'animation_tail' -and $tailLog -notmatch 'animation_loop|activation_requested' -and -not (Test-Path -LiteralPath $marker)) ([ordered]@{exitCode=[int]$tailObserver.ExitCode;tailObserved=[bool]($tailLog -match 'animation_tail');loopOrActivationObserved=[bool]($tailLog -match 'animation_loop|activation_requested');logFile=(Join-Path $runRoot 'output\startup-timing.log')})
     $config.SelectSingleNode('/launcher/startupTimeoutSeconds').InnerText = '3'
     $config.Save((Join-Path $runRoot 'launcher.config.xml'))
     $observer = Start-Owned $launcher '--observe --startup-test'
@@ -100,50 +107,70 @@ try {
     $config.SelectSingleNode('/launcher/startupTimeoutSeconds').InnerText = '15'
     $config.Save((Join-Path $runRoot 'launcher.config.xml'))
     $script:watcher = Start-Owned $watchExe
-    Check 'watcher-start-empty-baseline' (Wait-Condition { $s=Read-Status; $s -and $s.running -and $s.cyclesStarted -eq 0 }) (Read-Status)
+    Check 'watcher-start-empty-baseline' (Wait-Condition { $s=Read-Status; $s -and $s.running -and $s.cyclesStarted -eq 0 }) (Status-Evidence)
+    Start-Sleep -Milliseconds 4200
+    Check 'watcher-start-does-not-activate-target-or-overlay' ((Read-Status).cyclesStarted -eq 0 -and $null -eq (Read-Status).activeOverlayPid -and -not (Test-Path -LiteralPath $marker)) (Status-Evidence)
     $unrelated = Start-Owned (Join-Path $runRoot 'UnrelatedCodexCli.exe') '--delay-ms 1 --lifetime-ms 1600'
     [void]$unrelated.WaitForExit(4000)
-    Check 'unrelated-executable-excluded' ((Read-Status).cyclesStarted -eq 0) (Read-Status)
+    Check 'unrelated-executable-excluded' ((Read-Status).cyclesStarted -eq 0) (Status-Evidence)
     $target = Start-Owned $fixture ('--delay-ms 1300 --lifetime-ms 60000 --control "' + $controlFile + '" --marker "' + $marker + '"')
-    Check 'new-target-one-overlay' (Wait-Condition { (Read-Status).cyclesStarted -eq 1 }) (Read-Status)
-    Check 'observe-completes-with-no-activation' (Wait-Condition { $s=Read-Status; $s.cyclesStarted -eq 1 -and $s.mainWindowCount -eq 1 -and $null -eq $s.activeOverlayPid } 15000) (Read-Status)
+    Check 'new-target-one-overlay' (Wait-Condition { (Read-Status).cyclesStarted -eq 1 }) (Status-Evidence)
+    Check 'observe-completes-with-no-activation' (Wait-Condition { $s=Read-Status; $s.cyclesStarted -eq 1 -and $s.mainWindowCount -eq 1 -and $null -eq $s.activeOverlayPid } 15000) (Status-Evidence)
     $timing = Get-Content -LiteralPath (Join-Path $runRoot 'output\startup-timing.log') -Raw
-    Check 'passive-ready-and-single-process' ($timing -match 'window_ready' -and $timing -notmatch 'activation_requested' -and @(Get-Content -LiteralPath $marker | Where-Object { $_ -match 'process_started$' }).Count -eq 1) $timing
+    Check 'passive-ready-and-single-process' ($timing -match 'window_ready' -and $timing -notmatch 'activation_requested' -and @(Get-Content -LiteralPath $marker | Where-Object { $_ -match 'process_started$' }).Count -eq 1) ([ordered]@{windowReady=[bool]($timing -match 'window_ready');activationRequested=[bool]($timing -match 'activation_requested');targetProcessStarts=@(Get-Content -LiteralPath $marker | Where-Object { $_ -match 'process_started$' }).Count;logFile=(Join-Path $runRoot 'output\startup-timing.log')})
     $soundEvents = @(Import-Csv -LiteralPath (Join-Path $runRoot 'output\startup-timing.log') -Delimiter "`t")
     $watchEvents = @(Import-Csv -LiteralPath (Join-Path $runRoot 'output\watcher-events.tsv') -Delimiter "`t" -Header utc,event,detail)
     $soundStarted = @($soundEvents | Where-Object event -eq 'sound_started')
     $soundOpened = @($soundEvents | Where-Object { $_.event -eq 'sound_opened' -and $_.detail -match '^duration=8\.300s;' })
     $soundSuppressed = @($soundEvents | Where-Object { $_.event -in @('sound_disabled','sound_failed') })
     $overlayStarts = @($watchEvents | Where-Object event -eq 'overlay_started')
-    Check 'watcher-auto-sound-config-respected' ($soundStarted.Count -eq 1 -and $soundStarted[0].detail -match '; volume=0\.440$' -and $soundOpened.Count -eq 1 -and $soundSuppressed.Count -eq 0 -and $overlayStarts.Count -eq 1 -and $overlayStarts[0].detail -match '; arguments=--observe$') ([pscustomobject]@{soundEvents=@($soundEvents | Where-Object { $_.event -like 'sound_*' });overlayStarts=$overlayStarts;silentFixtureDurationSeconds=$fixtureSeconds;silentFixtureSamplesVerifiedZero=$silenceVerified})
-    Check 'watcher-complete-intro-and-ready-fade' ($timing -match 'page_ready_deferred' -and $timing -match 'intro_completed' -and $timing -match 'ready_fade_completed' -and $timing -notmatch 'ready_fade_failed|shutdown_deadline|sound_fade_completed') $timing
+    Check 'watcher-auto-sound-config-respected' ($soundStarted.Count -eq 1 -and $soundStarted[0].detail -match '; volume=0\.440$' -and $soundOpened.Count -eq 1 -and $soundSuppressed.Count -eq 0 -and $overlayStarts.Count -eq 1 -and $overlayStarts[0].detail -match '; arguments=--observe$') ([ordered]@{soundStartedCount=[int]$soundStarted.Count;soundOpenedCount=[int]$soundOpened.Count;soundSuppressedCount=[int]$soundSuppressed.Count;overlayStartCount=[int]$overlayStarts.Count;configuredVolumeObserved=[bool]($soundStarted.Count -eq 1 -and $soundStarted[0].detail -match '; volume=0\.440$');passiveArgumentsObserved=[bool]($overlayStarts.Count -eq 1 -and $overlayStarts[0].detail -match '; arguments=--observe$');silentFixtureDurationSeconds=$fixtureSeconds;silentFixtureSamplesVerifiedZero=$silenceVerified;logFile=(Join-Path $runRoot 'output\startup-timing.log')})
+    Check 'watcher-complete-intro-and-ready-fade' ($timing -match 'page_ready_deferred' -and $timing -match 'intro_completed' -and $timing -match 'ready_fade_completed' -and $timing -notmatch 'ready_fade_failed|shutdown_deadline|sound_fade_completed') ([ordered]@{pageReadyDeferred=[bool]($timing -match 'page_ready_deferred');introCompleted=[bool]($timing -match 'intro_completed');readyFadeCompleted=[bool]($timing -match 'ready_fade_completed');failureObserved=[bool]($timing -match 'ready_fade_failed|shutdown_deadline|sound_fade_completed');logFile=(Join-Path $runRoot 'output\startup-timing.log')})
     Set-Control 'minimize'
     Start-Sleep -Milliseconds 1200
     Set-Control 'restore'
     Start-Sleep -Milliseconds 1200
-    Check 'minimized-restore-no-replay' ((Read-Status).cyclesStarted -eq 1 -and (Read-Status).mainWindowCount -eq 1) (Read-Status)
+    Check 'minimized-restore-no-replay' (Wait-Condition { $s=Read-Status; $s.cyclesStarted -eq 1 -and $s.mainWindowCount -eq 1 }) (Status-Evidence)
+    Set-Control 'hide'
+    Check 'tray-hide-keeps-primary-cycle-consumed' (Wait-Condition { $s=Read-Status; $s.mainWindowCount -eq 0 -and $s.knownDesktopProcessCount -eq 1 -and $s.cyclesStarted -eq 1 }) (Status-Evidence)
+    Set-Control 'show'
+    Start-Sleep -Milliseconds 1600
+    Check 'tray-restore-no-replay' (Wait-Condition { $s=Read-Status; $s.cyclesStarted -eq 1 -and $s.mainWindowCount -eq 1 }) (Status-Evidence)
+    Set-Control 'hide'
+    Check 'tray-hidden-before-watcher-restart' (Wait-Condition { (Read-Status).mainWindowCount -eq 0 }) (Status-Evidence)
     Stop-Watch
     $script:watcher = Start-Owned $watchExe
-    Check 'watcher-restart-existing-window-no-replay' (Wait-Condition { $s=Read-Status; $s.running -and $s.mainWindowCount -eq 1 -and $s.cyclesStarted -eq 0 }) (Read-Status)
-    Set-Control 'hide'
-    Check 'all-windows-closed-rearms' (Wait-Condition { (Read-Status).mainWindowCount -eq 0 }) (Read-Status)
+    Check 'watcher-restart-hidden-process-no-replay' (Wait-Condition { $s=Read-Status; $s.pid -eq $script:watcher.Id -and $s.running -and $s.mainWindowCount -eq 0 -and $s.knownDesktopProcessCount -eq 1 -and $s.cyclesStarted -eq 0 }) (Status-Evidence)
     [IO.File]::WriteAllText($controlFile, 'child')
     if (-not (Wait-Condition { (Get-Content -LiteralPath $marker -ErrorAction SilentlyContinue) -match 'command_child' })) { throw 'Fixture child command not received' }
     Start-Sleep -Milliseconds 2200
-    Check 'electron-child-no-overlay' ((Read-Status).cyclesStarted -eq 0) (Read-Status)
+    Check 'electron-child-no-overlay' ((Read-Status).cyclesStarted -eq 0) (Status-Evidence)
+    $temporaryActivation = Start-Owned $fixture '--no-window --lifetime-ms 1800'
+    [void]$temporaryActivation.WaitForExit(5000)
+    Start-Sleep -Milliseconds 1300
+    Check 'new-activation-with-surviving-tray-host-no-overlay' (Wait-Condition { $s=Read-Status; $s.cyclesStarted -eq 0 -and $s.knownDesktopProcessCount -eq 1 }) (Status-Evidence)
     Set-Control 'show'
-    Check 'surviving-process-reopen-once' (Wait-Condition { (Read-Status).cyclesStarted -eq 1 }) (Read-Status)
+    Start-Sleep -Milliseconds 1600
+    Check 'hidden-baseline-restore-no-replay' (Wait-Condition { $s=Read-Status; $s.cyclesStarted -eq 0 -and $s.mainWindowCount -eq 1 }) (Status-Evidence)
+    Set-Control 'exit'
+    if (-not $target.WaitForExit(3000)) { throw 'Fixture target exit timed out' }
+    [IO.File]::WriteAllText($controlFile, 'restore-' + [Guid]::NewGuid().ToString('N'))
+    # Relaunch before a full polling interval has elapsed. The event path must
+    # validate old PID lifetimes instead of suppressing this real new start.
+    $target = Start-Owned $fixture ('--delay-ms 800 --lifetime-ms 60000 --control "' + $controlFile + '" --marker "' + $marker + '"')
+    Check 'complete-exit-rapid-relaunch-one-overlay' (Wait-Condition { (Read-Status).cyclesStarted -eq 1 }) (Status-Evidence)
+    Check 'rapid-relaunch-ready-without-duplicate' (Wait-Condition { $s=Read-Status; $s.cyclesStarted -eq 1 -and $s.mainWindowCount -eq 1 -and $null -eq $s.activeOverlayPid } 15000) (Status-Evidence)
     Stop-Watch
-    Check 'stop-does-not-stop-target' (-not $target.HasExited) (Read-Status)
+    Check 'stop-does-not-stop-target' (-not $target.HasExited) (Status-Evidence)
     Set-Control 'exit'
     [void]$target.WaitForExit(3000)
-} catch { $results.Add([pscustomobject]@{name='unexpected-error';passed=$false;evidence=$_.Exception.ToString()}) }
+} catch { $results.Add([ordered]@{name='unexpected-error';passed=$false;evidence=[string]$_.Exception.Message}) }
 finally {
     foreach ($p in $owned) {
         try { if (-not $p.HasExited -and $p.Path.StartsWith($runRoot + '\', [StringComparison]::OrdinalIgnoreCase)) { $p.Kill(); [void]$p.WaitForExit(3000) } } catch { }
     }
     $report = [ordered]@{passed=@($results | Where-Object { -not $_.passed }).Count -eq 0; launcherSha256=(Get-FileHash -LiteralPath $launcher -Algorithm SHA256).Hash; watcherSha256=(Get-FileHash -LiteralPath $watchExe -Algorithm SHA256).Hash; tests=$results.ToArray(); root=$runRoot; target='Only isolated fake executables. No real Codex activation.'; silentFixture=$silentPath; silentFixtureDurationSeconds=$fixtureSeconds; silentFixtureSamplesVerifiedZero=$silenceVerified; soundVolume=0.44; originalAudioPlaybackRequested=$false}
-    $report | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $runRoot 'results.json') -Encoding utf8
+    $report | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $runRoot 'results.json') -Encoding utf8
     Write-Output ('Results: ' + (Join-Path $runRoot 'results.json'))
 }
 if (-not $report.passed) { exit 1 }

@@ -71,6 +71,24 @@ public static class FakeTarget
         return index >= 0 && index + 1 < args.Length ? args[index + 1] : fallback;
     }
 
+    private static Window CreateTargetWindow(bool maximize)
+    {
+        var window = new Window
+        {
+            Title = "Launcher integration fake target",
+            Width = 640,
+            Height = 420,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen,
+            Background = Brushes.DarkSlateGray,
+            Content = CreateInteractivePage(true)
+        };
+        window.ContentRendered += delegate { Record("window_rendered"); };
+        window.Closed += delegate { Record("window_closed"); };
+        if (maximize) window.WindowState = WindowState.Maximized;
+        window.Show();
+        return window;
+    }
+
     [STAThread]
     public static int Main(string[] args)
     {
@@ -93,20 +111,7 @@ public static class FakeTarget
             show.Tick += delegate
             {
                 show.Stop();
-                var window = new Window
-                {
-                    Title = "Launcher integration fake target",
-                    Width = 640,
-                    Height = 420,
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
-                    Background = Brushes.DarkSlateGray,
-                    Content = CreateInteractivePage(true)
-                };
-                window.ContentRendered += delegate { Record("window_rendered"); };
-                window.Closed += delegate { Record("window_closed"); };
-                targetWindow = window;
-                if (maximize) window.WindowState = WindowState.Maximized;
-                window.Show();
+                targetWindow = CreateTargetWindow(maximize);
             };
             show.Start();
         }
@@ -123,12 +128,14 @@ public static class FakeTarget
                 }
                 catch { return; }
                 string operation = command.Split('-')[0];
-                if (operation == previousCommand || targetWindow == null) return;
+                if (operation == previousCommand || targetWindow == null && operation != "create" && operation != "exit" && operation != "child") return;
                 previousCommand = operation;
                 if (operation == "minimize") targetWindow.WindowState = WindowState.Minimized;
                 else if (operation == "restore") { targetWindow.WindowState = WindowState.Normal; targetWindow.Show(); }
                 else if (operation == "hide") targetWindow.Hide();
                 else if (operation == "show") targetWindow.Show();
+                else if (operation == "destroy") { targetWindow.Close(); targetWindow = null; }
+                else if (operation == "create") { if (targetWindow == null) targetWindow = CreateTargetWindow(false); }
                 else if (operation == "child")
                 {
                     string childExecutable = Process.GetCurrentProcess().MainModule.FileName;
